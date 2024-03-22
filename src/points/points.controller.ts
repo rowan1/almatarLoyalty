@@ -1,7 +1,8 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
 import { User } from 'src/user/user.decorator';
 import { PointsService } from './points.service';
+import { TransferePointsDto } from 'src/transaction/dto/transfere-points-dto';
 
 @Controller('points')
 @UseGuards(JwtAuthGuard)
@@ -13,9 +14,15 @@ export class PointsController {
     return points;
   }
 
-  @Get('/all')
-  async get() {
-    const points = await this.pointsService.getAllPoints();
-    return points;
+  @Post('/transfer')
+  async transferePoints(
+    @User() user,
+    @Body() transfereDto: TransferePointsDto,
+  ) {
+    const transaction = await this.pointsService.transferPoints(
+      user.id,
+      transfereDto,
+    );
+    return transaction;
   }
 }

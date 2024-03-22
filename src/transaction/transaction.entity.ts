@@ -4,7 +4,6 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -23,9 +22,6 @@ class Transaction {
 
   @Column()
   amount: number;
-
-  @Column()
-  expired: boolean;
 
   @Column({
     type: 'enum',

@@ -7,8 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UserCreatedEvent } from 'src/user/events/user-created.event';
-import { EventType } from 'src/user/listeners/event-type.enum';
+import { UserCreatedEvent } from 'src/events/user-created.event';
+import { EventType } from 'src/events/enum/event-type.enum';
 
 @Injectable()
 export class AuthService {
