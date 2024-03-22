@@ -11,8 +11,7 @@ export class UserCreatedListener {
 
   @OnEvent(EventType.USER_CREATED)
   handleUserCreatedEvent(payload: UserCreatedEvent) {
-    console.log('Handle and process UserCreatedEvent event');
-    console.log(payload);
+    console.log('Handle and process UserCreatedEvent event', payload);
     const createPointsDto: CreatePointsDto = {
       userId: payload.id,
       count: 500,
