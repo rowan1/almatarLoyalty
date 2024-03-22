@@ -29,11 +29,11 @@ export class UsersController {
     return user;
   }
 
-  @Post()
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    const newUser = await this.usersService.createUser(createUserDto);
-    return newUser;
-  }
+  // @Post()
+  // async createUser(@Body() createUserDto: CreateUserDto) {
+  //   const newUser = await this.usersService.createUser(createUserDto);
+  //   return newUser;
+  // }
 
   @Delete(':id')
   async deleteById(@Param('id') id: string): Promise<User> {

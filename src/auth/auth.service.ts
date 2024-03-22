@@ -6,6 +6,9 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserCreatedEvent } from 'src/user/events/user-created.event';
+import { EventType } from 'src/user/listeners/event-type.enum';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +16,7 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
@@ -27,6 +31,13 @@ export class AuthService {
     });
 
     await this.usersRepository.save(user);
+
+    console.log('New user has been created! ');
+    console.log('Emitting new created user event');
+    const userCreatedEvent = new UserCreatedEvent();
+    userCreatedEvent.name = user.name;
+    userCreatedEvent.id = user.id;
+    this.eventEmitter.emit(EventType.USER_CREATED, userCreatedEvent);
 
     const token = this.jwtService.sign({ id: user.id });
 

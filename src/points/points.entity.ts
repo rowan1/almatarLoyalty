@@ -1,24 +1,31 @@
+import User from 'src/user/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-class User {
+class Points {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  name: string;
-
-  @Column({ unique: true })
-  email: string;
+  count: number;
 
   @Column()
-  password: string;
+  userId: number;
+
+  @Column({ default: false })
+  expired: boolean;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @CreateDateColumn({
     type: 'timestamp',
@@ -34,4 +41,4 @@ class User {
   updated_at: Date;
 }
 
-export default User;
+export default Points;
