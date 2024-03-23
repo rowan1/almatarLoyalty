@@ -11,6 +11,7 @@ import { TransactionStatus } from './enum/transaction-status.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType } from 'src/events/enum/event-type.enum';
 import { PointsTransferConfirmedEvent } from 'src/events/points-transfer-confirmed.event';
+import { CustomLogger } from 'src/service/logger/logger.service';
 
 @Injectable()
 export class TransactionService {
@@ -18,7 +19,10 @@ export class TransactionService {
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
     private eventEmitter: EventEmitter2,
-  ) {}
+    private logger: CustomLogger,
+  ) {
+    this.logger.setContext(TransactionService.name);
+  }
 
   async create(createTransactionDto: CreateTransactionDto) {
     const newTransaction = await this.transactionRepository.create(
@@ -45,8 +49,8 @@ export class TransactionService {
     if (transaction.status != TransactionStatus.PENDING)
       throw new BadRequestException('Transition cannot be done at this state!');
     if (this.isExpired(transaction)) {
-      // transaction.status = TransactionStatus.EXPIRED;
-      // this.transactionRepository.save(transaction);
+      transaction.status = TransactionStatus.EXPIRED;
+      this.transactionRepository.save(transaction);
       throw new BadRequestException('Transition expired!');
     }
     transaction.status = TransactionStatus.CONFIRMED;
@@ -78,16 +82,32 @@ export class TransactionService {
   private isExpired(transaction: Transaction): boolean {
     let expiryDate = transaction.created_at;
     const nowDate = new Date();
-    console.log(
+    this.logger.log(
       `Transaction of ID ${transaction.id} created at ${transaction.created_at}`,
     );
     expiryDate.setMinutes(expiryDate.getMinutes() + 10);
     expiryDate = new Date(expiryDate);
-    console.log(`Transaction of ID ${transaction.id} expires at ${expiryDate}`);
+    this.logger.log(
+      `Transaction of ID ${transaction.id} expires at ${expiryDate}`,
+    );
     const isExpired = nowDate.getTime() >= expiryDate.getTime();
-    console.log(
+    this.logger.log(
       `Transaction of ID ${transaction.id}. Is expired? ${isExpired}`,
     );
     return isExpired;
+  }
+
+  async updateExpiredTransaction() {
+    const transactions = await this.transactionRepository.find({
+      where: { status: TransactionStatus.PENDING },
+    });
+    const expiredTransactions: Transaction[] = [];
+    transactions.forEach((transaction) => {
+      if (this.isExpired(transaction)) {
+        transaction.status = TransactionStatus.EXPIRED;
+        expiredTransactions.push(transaction);
+      }
+    });
+    this.transactionRepository.save(transactions);
   }
 }

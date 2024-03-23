@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { PointsModule } from './points/points.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       verboseMemoryLeak: false,
       ignoreErrors: false,
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     UsersModule,
     AuthModule,
