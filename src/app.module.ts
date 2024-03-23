@@ -7,8 +7,6 @@ import { DatabaseModule } from 'src/database/database.module';
 import { UsersModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PointsModule } from './points/points.module';
-import { TransactionService } from './transaction/transaction.service';
-import { TransactionController } from './transaction/transaction.controller';
 import { TransactionModule } from './transaction/transaction.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 

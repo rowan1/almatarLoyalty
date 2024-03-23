@@ -28,6 +28,7 @@ export class TransactionService {
       userId: createTransactionDto.userId,
       authorId: createTransactionDto.authorId,
       amount: createTransactionDto.amount,
+      created_at: new Date(),
     });
     return newTransaction;
   }
@@ -42,7 +43,12 @@ export class TransactionService {
     if (!transaction)
       throw new NotFoundException('Could not find the transaction');
     if (transaction.status != TransactionStatus.PENDING)
-      throw new BadRequestException('Transaction cannot be edited!');
+      throw new BadRequestException('Transition cannot be done at this state!');
+    if (this.isExpired(transaction)) {
+      // transaction.status = TransactionStatus.EXPIRED;
+      // this.transactionRepository.save(transaction);
+      throw new BadRequestException('Transition expired!');
+    }
     transaction.status = TransactionStatus.CONFIRMED;
     await this.transactionRepository.save(transaction);
 
@@ -67,5 +73,21 @@ export class TransactionService {
       EventType.POINTS_TRANSFER_CONFIRMED,
       pointsTransferConfirmed,
     );
+  }
+
+  private isExpired(transaction: Transaction): boolean {
+    let expiryDate = transaction.created_at;
+    const nowDate = new Date();
+    console.log(
+      `Transaction of ID ${transaction.id} created at ${transaction.created_at}`,
+    );
+    expiryDate.setMinutes(expiryDate.getMinutes() + 10);
+    expiryDate = new Date(expiryDate);
+    console.log(`Transaction of ID ${transaction.id} expires at ${expiryDate}`);
+    const isExpired = nowDate.getTime() >= expiryDate.getTime();
+    console.log(
+      `Transaction of ID ${transaction.id}. Is expired? ${isExpired}`,
+    );
+    return isExpired;
   }
 }
