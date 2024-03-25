@@ -6,8 +6,10 @@ import * as Joi from '@hapi/joi';
 import { DatabaseModule } from 'src/database/database.module';
 import { UsersModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { AuthController } from './auth/auth.controller';
-import { UsersController } from './user/users.controller';
+import { PointsModule } from './points/points.module';
+import { TransactionModule } from './transaction/transaction.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -21,11 +23,23 @@ import { UsersController } from './user/users.controller';
         PORT: Joi.number(),
       }),
     }),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      newListener: true,
+      removeListener: false,
+      maxListeners: 10,
+      verboseMemoryLeak: false,
+      ignoreErrors: false,
+    }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     UsersModule,
     AuthModule,
+    PointsModule,
+    TransactionModule,
   ],
-  controllers: [AppController, AuthController, UsersController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+# service for web application
+  web:
+    container_name: almatar_loyality
+    build: 
+      context: .
+    ports:
+      - 9229:9229 
+      - 3000:3000
+    command: npm run start:dev
+    volumes:
+      - .:/usr/src/app 
+      - /usr/src/app/node_modules
+    env_file:
+      - .env 
+    depends_on:
+      - postgres
+
+# service for postgres database
+  postgres:
+    container_name: almatar_loyality_postgres
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_USER: almatar
+      POSTGRES_PASSWORD: almatar_loyalty
+      POSTGRES_DB: almatar_loyalty
+      # POSTGRES_HOST: ${POSTGRES_HOST}
+      # POSTGRES_PORT: ${POSTGRES_PORT}
+    ports:
+      - 5432:5432
+    volumes:
+      - pgalmatardata:/var/lib/postgresql/data
+volumes:
+  pgalmatardata:

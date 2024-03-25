@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { CustomLogger } from 'src/service/logger/logger.service';
 
 const passportModule = PassportModule.register({ defaultStrategy: 'jwt' });
 
@@ -28,7 +29,7 @@ const passportModule = PassportModule.register({ defaultStrategy: 'jwt' });
     TypeOrmModule.forFeature([User]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, CustomLogger],
   exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {}

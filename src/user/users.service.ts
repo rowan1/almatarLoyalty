@@ -2,8 +2,6 @@ import { NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from './user.entity';
-import { CreateUserDto } from './dto/user.dto';
-
 export class UsersService {
   constructor(
     @InjectRepository(User)
@@ -11,7 +9,7 @@ export class UsersService {
   ) {}
 
   async getAllUsers() {
-    console.log('Get all users!!!!');
+    console.log('Get all users.');
     const users = this.usersRepository.find();
     return users;
   }
@@ -26,16 +24,6 @@ export class UsersService {
       return user;
     }
     throw new NotFoundException('Could not find the user');
-  }
-
-  async createUser(createUserDto: CreateUserDto) {
-    const newUser = await this.usersRepository.create(createUserDto);
-    await this.usersRepository.save({
-      name: createUserDto.name,
-      email: createUserDto.email,
-      password: createUserDto.password,
-    });
-    return newUser;
   }
 
   async deleteById(id: number) {

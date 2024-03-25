@@ -1,0 +1,317 @@
+{
+	"info": {
+		"_postman_id": "9f162d61-25c6-429c-b4c0-c3da980e1a94",
+		"name": "Loyality",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18670230"
+	},
+	"item": [
+		{
+			"name": "signup",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response=pm.response.json();",
+							"pm.collectionVariables.set(\"loyality_user_token\", response.token);",
+							"pm.collectionVariables.set(\"loyality_user_id\", response.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Rowan Ibrahim\",\n    \"email\": \"rowansalam@gamil.com\",\n    \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server_url}}/auth/signup",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response=pm.response.json();",
+							"pm.collectionVariables.set(\"loyality_user_token\", response.token);",
+							"pm.collectionVariables.set(\"loyality_user_id\", response.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Rowan Ibrahim\",\n    \"email\": \"rowansalam@gamil.com\",\n    \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server_url}}/auth/login",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user by id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{loyality_user_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server_url}}/users/:user_id",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"users",
+						":user_id"
+					],
+					"variable": [
+						{
+							"key": "user_id",
+							"value": "{{loyality_user_id}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "transfer points",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{loyality_user_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userId\": 2,\n    \"amount\": 50\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server_url}}/points/transfer",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"points",
+						"transfer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get all transactions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{loyality_user_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server_url}}/transactions",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user points",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{loyality_user_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server_url}}/points/users/:user_id",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"points",
+						"users",
+						":user_id"
+					],
+					"variable": [
+						{
+							"key": "user_id",
+							"value": "{{loyality_user_id}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "confirm transfer",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{loyality_user_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{server_url}}/transactions/1/confirm",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"transactions",
+						"1",
+						"confirm"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all points",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{loyality_user_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server_url}}/points",
+					"host": [
+						"{{server_url}}"
+					],
+					"path": [
+						"points"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "server_url",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "loyality_user_token",
+			"value": ""
+		},
+		{
+			"key": "loyality_user_id",
+			"value": ""
+		}
+	]
+}
