@@ -21,73 +21,49 @@ export class PointsService {
   ) {}
 
   async getAllPoints() {
-    console.log('Get all points.');
-    const users = this.pointsRepository.find();
-    return users;
+    console.log('Fetching all points.');
+    return this.pointsRepository.find();
   }
 
   async getPointsById(id: number) {
-    const points = await this.pointsRepository.findOne({
-      where: {
-        id: id,
-      },
-    });
+    const points = await this.findOnePoint({ id });
     if (points) {
       return points;
     }
-    throw new NotFoundException('Could not find point for this id');
+    throw new NotFoundException('Could not find points with this ID');
   }
 
   async getPointsByUserId(userId: number) {
-    const points = await this.pointsRepository.findOne({
-      where: {
-        userId: userId,
-      },
-    });
+    const points = await this.findOnePoint({ userId });
     if (points) {
       return points;
     }
-    throw new NotFoundException('Could not find the points for this user');
+    throw new NotFoundException('Could not find points for this user');
   }
 
   async createUserPoints(createPointsDto: CreatePointsDto) {
-    const newUserPoints = await this.pointsRepository.create(createPointsDto);
-    console.log('Create user points.');
-    await this.pointsRepository.save({
-      count: createPointsDto.count,
-      userId: createPointsDto.userId,
-    });
-    return newUserPoints;
+    console.log('Creating user points.');
+    return this.pointsRepository.save(createPointsDto);
   }
 
   async deleteById(id: number) {
-    const points = await this.pointsRepository.findOne({
-      where: {
-        id: id,
-      },
-    });
+    const points = await this.findOnePoint({ id });
     if (!points) {
-      throw new NotFoundException('Could not find point for this id');
+      throw new NotFoundException('Could not find points with this ID');
     }
-
     await this.pointsRepository.remove(points);
     return points;
   }
+
   async transferPoints(authorId: number, transfereDto: TransferePointsDto) {
     console.log(
-      `Transfere Points ${transfereDto.amount} from user ID ${authorId} to user ID ${transfereDto.userId}`,
+      `Transferring ${transfereDto.amount} points from user ID ${authorId} to user ID ${transfereDto.userId}`,
     );
-    const points = await this.pointsRepository.findOne({
-      where: {
-        userId: authorId,
-      },
-    });
-    if (!points) throw new NotFoundException('Cannot find user points.');
-    if (points.count < transfereDto.amount)
-      throw new BadRequestException('You cannot transefer this amount.');
+    const authorPoints = await this.findUserPoints(authorId);
+    this.validateUserPoints(authorPoints, transfereDto.amount);
 
-    points.count = points.count - transfereDto.amount;
-    await this.pointsRepository.save(points);
+    authorPoints.count -= transfereDto.amount;
+    await this.pointsRepository.save(authorPoints);
 
     const pointsTransferedEvent = new PointsTransferedEvent();
     pointsTransferedEvent.userId = transfereDto.userId;
@@ -96,25 +72,38 @@ export class PointsService {
 
     this.eventEmitter.emit(EventType.POINTS_TRANSFERED, pointsTransferedEvent);
 
-    return points;
+    return authorPoints;
   }
 
   async confirmTransferPoints(userId: number, amount: number) {
-    const points = await this.pointsRepository.findOne({
-      where: {
-        userId: userId,
-      },
-    });
+    const points = await this.findUserPoints(userId);
     if (!points) {
       console.log(
-        `No points found. Creating new Points for user ${userId} with amount: ${amount}`,
+        `No points found for user ${userId}. Creating new points with amount: ${amount}`,
       );
       const createPointsDto = new CreatePointsDto();
       createPointsDto.count = amount;
       createPointsDto.userId = userId;
-      return await this.createUserPoints(createPointsDto);
+      return this.createUserPoints(createPointsDto);
     }
-    points.count = points.count + amount;
-    return await this.pointsRepository.save(points);
+    points.count += amount;
+    return this.pointsRepository.save(points);
+  }
+
+  private async findOnePoint(where: any) {
+    return this.pointsRepository.findOne({ where });
+  }
+
+  private async findUserPoints(userId: number) {
+    return this.findOnePoint({ userId });
+  }
+
+  private validateUserPoints(points: Points, amount: number) {
+    if (!points) {
+      throw new NotFoundException('Cannot find user points.');
+    }
+    if (points.count < amount) {
+      throw new BadRequestException('Insufficient points for transfer.');
+    }
   }
 }

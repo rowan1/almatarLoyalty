@@ -9,6 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/events/user-created.event';
 import { EventType } from 'src/events/enum/event-type.enum';
+import { CustomLogger } from 'src/service/logger/logger.service';
 
 @Injectable()
 export class AuthService {
@@ -17,14 +18,17 @@ export class AuthService {
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
     private eventEmitter: EventEmitter2,
-  ) {}
+    private logger: CustomLogger,
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
   async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
     const { name, email, password } = signUpDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await this.usersRepository.create({
+    const user = this.usersRepository.create({
       name,
       email,
       password: hashedPassword,
@@ -32,14 +36,10 @@ export class AuthService {
 
     await this.usersRepository.save(user);
 
-    console.log('New user has been created! ');
-    console.log('Emitting new created user event');
-    const userCreatedEvent = new UserCreatedEvent();
-    userCreatedEvent.name = user.name;
-    userCreatedEvent.id = user.id;
-    this.eventEmitter.emit(EventType.USER_CREATED, userCreatedEvent);
+    this.logger.log('New user has been created!');
+    this.emitUserCreatedEvent(user);
 
-    const token = this.jwtService.sign({ id: user.id });
+    const token = this.generateToken(user.id);
 
     return { token };
   }
@@ -47,22 +47,25 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<{ token: string }> {
     const { email, password } = loginDto;
 
-    const user = await this.usersRepository.findOne({
-      where: { email },
-    });
+    const user = await this.usersRepository.findOne({ where: { email } });
 
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isPasswordMatched = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordMatched) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    const token = this.jwtService.sign({ id: user.id });
+    const token = this.generateToken(user.id);
 
     return { token };
+  }
+
+  private emitUserCreatedEvent(user: User): void {
+    const userCreatedEvent = new UserCreatedEvent();
+    userCreatedEvent.name = user.name;
+    userCreatedEvent.id = user.id;
+    this.eventEmitter.emit(EventType.USER_CREATED, userCreatedEvent);
+  }
+
+  private generateToken(userId: number): string {
+    return this.jwtService.sign({ id: userId });
   }
 }

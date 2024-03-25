@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
 import { User } from 'src/user/user.decorator';
 import { PointsService } from './points.service';
@@ -9,12 +17,19 @@ import { TransferePointsDto } from 'src/transaction/dto/transfere-points-dto';
 export class PointsController {
   constructor(private readonly pointsService: PointsService) {}
   @Get()
-  async getByUserId(@User() user) {
+  async getPoints() {
+    const points = await this.pointsService.getAllPoints();
+    return points;
+  }
+
+  @Get('users/:id')
+  async getByUserId(@User() user, @Param('id') userId: number) {
+    this.ensureUserAccess(user, userId);
     const points = await this.pointsService.getPointsByUserId(user.id);
     return points;
   }
 
-  @Post('/transfer')
+  @Post('transfer')
   async transferePoints(
     @User() user,
     @Body() transfereDto: TransferePointsDto,
@@ -24,5 +39,10 @@ export class PointsController {
       transfereDto,
     );
     return transaction;
+  }
+  private ensureUserAccess(user: any, userId: number): void {
+    if (!user || user.id != userId) {
+      throw new UnauthorizedException('Cannot access this resource');
+    }
   }
 }

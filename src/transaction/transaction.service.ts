@@ -25,10 +25,7 @@ export class TransactionService {
   }
 
   async create(createTransactionDto: CreateTransactionDto) {
-    const newTransaction = await this.transactionRepository.create(
-      createTransactionDto,
-    );
-    await this.transactionRepository.save({
+    const newTransaction = await this.transactionRepository.save({
       userId: createTransactionDto.userId,
       authorId: createTransactionDto.authorId,
       amount: createTransactionDto.amount,
@@ -38,21 +35,13 @@ export class TransactionService {
   }
 
   async confirmTransfer(userId: number, transactionId: number) {
-    const transaction = await this.transactionRepository.findOne({
-      where: {
-        id: transactionId,
-        userId: userId,
-      },
-    });
-    if (!transaction)
-      throw new NotFoundException('Could not find the transaction');
-    if (transaction.status != TransactionStatus.PENDING)
-      throw new BadRequestException('Transition cannot be done at this state!');
-    if (this.isExpired(transaction)) {
-      transaction.status = TransactionStatus.EXPIRED;
-      this.transactionRepository.save(transaction);
-      throw new BadRequestException('Transition expired!');
-    }
+    this.logger.log(
+      `User ${userId} sent confirm transfer request for transaction ${transactionId}`,
+    );
+    const transaction = await this.getTransaction(userId, transactionId);
+    this.validateTransaction(transaction);
+    this.checkAndHandleExpiry(transaction);
+
     transaction.status = TransactionStatus.CONFIRMED;
     await this.transactionRepository.save(transaction);
 
@@ -65,7 +54,30 @@ export class TransactionService {
   }
 
   async getAuthorTransactions(authorId: number) {
-    return this.transactionRepository.find({ where: { authorId: authorId } });
+    return this.transactionRepository.find({ where: { authorId } });
+  }
+
+  private async getTransaction(userId: number, transactionId: number) {
+    const transaction = await this.transactionRepository.findOne({
+      where: { id: transactionId, userId },
+    });
+    if (!transaction) {
+      throw new NotFoundException('Could not find the transaction');
+    }
+    return transaction;
+  }
+
+  private validateTransaction(transaction: Transaction) {
+    if (transaction.status !== TransactionStatus.PENDING) {
+      throw new BadRequestException('Transition cannot be done at this state!');
+    }
+  }
+
+  private checkAndHandleExpiry(transaction: Transaction) {
+    if (this.isExpired(transaction)) {
+      transaction.status = TransactionStatus.EXPIRED;
+      throw new BadRequestException('Transition expired!');
+    }
   }
 
   private sendPointTransferedConfirmedEvent(transaction: Transaction) {
@@ -80,34 +92,37 @@ export class TransactionService {
   }
 
   private isExpired(transaction: Transaction): boolean {
-    let expiryDate = transaction.created_at;
-    const nowDate = new Date();
-    this.logger.log(
-      `Transaction of ID ${transaction.id} created at ${transaction.created_at}`,
-    );
+    const expiryDate = new Date(transaction.created_at);
     expiryDate.setMinutes(expiryDate.getMinutes() + 10);
-    expiryDate = new Date(expiryDate);
+
     this.logger.log(
-      `Transaction of ID ${transaction.id} expires at ${expiryDate}`,
+      `Transaction ID ${transaction.id} created at ${transaction.created_at}`,
     );
-    const isExpired = nowDate.getTime() >= expiryDate.getTime();
     this.logger.log(
-      `Transaction of ID ${transaction.id}. Is expired? ${isExpired}`,
+      `Transaction ID ${transaction.id} expires at ${expiryDate}`,
     );
-    return isExpired;
+
+    return Date.now() >= expiryDate.getTime();
   }
 
   async updateExpiredTransaction() {
-    const transactions = await this.transactionRepository.find({
+    const pendingTransactions = await this.findPendingTransactions();
+    const expiredTransactions = pendingTransactions.filter((transaction) =>
+      this.isExpired(transaction),
+    );
+
+    if (expiredTransactions.length > 0) {
+      expiredTransactions.forEach((transaction) => {
+        transaction.status = TransactionStatus.EXPIRED;
+      });
+
+      await this.transactionRepository.save(expiredTransactions);
+    }
+  }
+
+  private async findPendingTransactions(): Promise<Transaction[]> {
+    return this.transactionRepository.find({
       where: { status: TransactionStatus.PENDING },
     });
-    const expiredTransactions: Transaction[] = [];
-    transactions.forEach((transaction) => {
-      if (this.isExpired(transaction)) {
-        transaction.status = TransactionStatus.EXPIRED;
-        expiredTransactions.push(transaction);
-      }
-    });
-    this.transactionRepository.save(transactions);
   }
 }

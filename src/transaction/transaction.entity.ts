@@ -4,12 +4,13 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { TransactionStatus } from './enum/transaction-status.enum';
 
-@Entity()
+@Entity({ name: 'transactions' })
 class Transaction {
   @PrimaryGeneratedColumn()
   id: number;
@@ -30,11 +31,11 @@ class Transaction {
   })
   status: TransactionStatus;
 
-  //   @OneToOne(() => User)
+  @OneToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  //   @OneToOne(() => User)
+  @OneToOne(() => User)
   @JoinColumn({ name: 'authorId' })
   author: User;
 

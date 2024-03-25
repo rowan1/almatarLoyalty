@@ -4,7 +4,7 @@ import { TransactionService } from './transaction.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
 
 @UseGuards(JwtAuthGuard)
-@Controller('transaction')
+@Controller('transactions')
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
@@ -20,7 +20,7 @@ export class TransactionController {
   async getTransactions() {
     return await this.transactionService.getAllTransactions();
   }
-  @Get('user/:id')
+  @Get('users/:id')
   async getAuthorTransactions(@Param('id') authorId: number) {
     return await this.transactionService.getAuthorTransactions(authorId);
   }
