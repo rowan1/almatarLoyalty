@@ -10,6 +10,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/events/user-created.event';
 import { EventType } from 'src/events/enum/event-type.enum';
 import { CustomLogger } from 'src/service/logger/logger.service';
+import { TokenResponseDto } from './dto/token.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,7 @@ export class AuthService {
     this.logger.setContext(AuthService.name);
   }
 
-  async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
+  async signUp(signUpDto: SignUpDto): Promise<TokenResponseDto> {
     const { name, email, password } = signUpDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -41,10 +42,10 @@ export class AuthService {
 
     const token = this.generateToken(user.id);
 
-    return { token };
+    return { id: user.id, name: user.name, token };
   }
 
-  async login(loginDto: LoginDto): Promise<{ token: string }> {
+  async login(loginDto: LoginDto): Promise<TokenResponseDto> {
     const { email, password } = loginDto;
 
     const user = await this.usersRepository.findOne({ where: { email } });
@@ -55,7 +56,7 @@ export class AuthService {
 
     const token = this.generateToken(user.id);
 
-    return { token };
+    return { id: user.id, name: user.name, token };
   }
 
   private emitUserCreatedEvent(user: User): void {
