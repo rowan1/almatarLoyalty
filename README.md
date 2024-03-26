@@ -11,15 +11,16 @@ $ npm install
 $ docker-compose up
 
 # watch mode
-make sure to update .env file with your database credetinals
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgresSecret
-POSTGRES_DB=almatar_loyalty
-PORT=5000
-$ yarn
-$ yarn start:dev
+make sure to update .env file with your database credetinals \
+POSTGRES_HOST=localhost \
+POSTGRES_PORT=5432 \
+POSTGRES_USER=postgres \
+POSTGRES_PASSWORD=postgresSecret \
+POSTGRES_DB=almatar_loyalty \
+PORT=5000 \
+
+$ yarn \
+$ yarn start:dev \
 
 
 ## API's
